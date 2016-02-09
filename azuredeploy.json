@@ -1,0 +1,143 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "tenantName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Tenant"
+            }
+        }
+    },
+    "variables": {
+        "cdnApiVersion": "2015-06-01",
+        "webAppApiVersion": "2015-08-01",
+        "tenantName": "[parameters('tenantName')]",
+        "serverFarmName": "[concat(variables('tenantName'), 'farm')]",
+        "guishellappname": "[concat(variables('tenantName'), 'gui')]",
+        "distributionappname": "[concat(variables('tenantName'), 'distribution')]",
+        "frontendappname": "[concat(variables('tenantName'), 'fe')]",
+        "backendappname": "[concat(variables('tenantName'), 'be')]",
+        "mongotemplateUrl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/mongodb-on-ubuntu/azuredeploy.json",
+        "newStorageAccountName": "[concat(variables('tenantName'), 'stg')]",
+        "adminUsername": "[concat(variables('tenantName'), 'admin')]",
+        "adminPassword": "[concat(variables('tenantName'), 'pwd.01')]",
+        "dnsNameForPublicIP": "[concat(variables('tenantName'), 'mongodns')]",
+        "location": "West Europe",
+        "virtualNetworkName": "[concat(variables('tenantName'), 'vnet')]",
+        "vmSize": "Standard_A0",
+        "vmName": "[concat(variables('tenantName'), 'mongodb')]",
+        "publicIPAddressName": "[concat(variables('tenantName'), 'pip')]",
+        "nicName": "[concat(variables('tenantName'), 'nic')]"
+    },
+    "resources": [
+        {
+            "name": "mongo-db-resource",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('mongotemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "newStorageAccountName": {
+                        "value": "[variables('newStorageAccountName')]"
+                    },
+                    "adminUsername": {
+                        "value": "[variables('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[variables('adminPassword')]"
+                    },
+                    "dnsNameForPublicIP": {
+                        "value": "[variables('dnsNameForPublicIP')]"
+                    },
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "virtualNetworkName": {
+                        "value": "[variables('virtualNetworkName')]"
+                    },
+                    "vmSize": {
+                        "value": "[variables('vmSize')]"
+                    },
+                    "vmName": {
+                        "value": "[variables('vmName')]"
+                    },
+                    "publicIPAddressName": {
+                        "value": "[variables('publicIPAddressName')]"
+                    },
+                    "nicName": {
+                        "value": "[variables('nicName')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "[variables('serverFarmName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "[variables('webAppApiVersion')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "B1",
+                "tier": "Basic",
+                "capacity": 1
+            }
+        },
+        {
+            "name": "[variables('distributionappname')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "[variables('webAppApiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('serverFarmName'))]"
+            ],
+            "properties": {
+                "name": "[variables('distributionappname')]",
+                "serverFarmId": "[variables('serverFarmName')]"
+            }
+        },
+        {
+            "name": "[variables('frontendappname')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "[variables('webAppApiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('serverFarmName'))]"
+            ],
+            "properties": {
+                "name": "[variables('frontendappname')]",
+                "serverFarmId": "[variables('serverFarmName')]"
+            }
+        },
+        {
+            "name": "[variables('backendappname')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "[variables('webAppApiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('serverFarmName'))]"
+            ],
+            "properties": {
+                "name": "[variables('backendappname')]",
+                "serverFarmId": "[variables('serverFarmName')]"
+            }
+        },
+        {
+            "name": "[variables('guishellappname')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "[variables('webAppApiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('serverFarmName'))]"
+            ],
+            "properties": {
+                "name": "[variables('guishellappname')]",
+                "serverFarmId": "[variables('serverFarmName')]"
+            }
+        }
+       
+    ]
+}
