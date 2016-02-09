@@ -19,16 +19,21 @@
         "frontendappname": "[concat(variables('tenantName'), 'fe')]",
         "backendappname": "[concat(variables('tenantName'), 'be')]",
         "mongotemplateUrl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/mongodb-on-ubuntu/azuredeploy.json",
-        "newStorageAccountName": "[concat(variables('tenantName'), 'stg')]",
-        "adminUsername": "[concat(variables('tenantName'), 'admin')]",
-        "adminPassword": "[concat(variables('tenantName'), 'pwd.01')]",
-        "dnsNameForPublicIP": "[concat(variables('tenantName'), 'mongodns')]",
+        "graphitetemplateUrl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/mongodb-on-ubuntu/azuredeploy.json",
+        "vmStorageAccountNameBase": "[concat(variables('tenantName'), 'stg')]",
+        "mongoAdminUsername": "[concat(variables('tenantName'), 'admin')]",
+        "mongoAdminPassword": "[concat(variables('tenantName'), 'pwd.01')]",
+        "graphiteAdminUsername": "[concat(variables('tenantName'), 'admin')]",
+        "graphiteAdminPassword": "[concat(variables('tenantName'), 'pwd.01')]",
+        "dnsNameForPublicIPBase": "[concat(variables('tenantName'), 'mongodns')]",
         "location": "West Europe",
         "virtualNetworkName": "[concat(variables('tenantName'), 'vnet')]",
-        "vmSize": "Standard_A0",
-        "vmName": "[concat(variables('tenantName'), 'mongodb')]",
-        "publicIPAddressName": "[concat(variables('tenantName'), 'pip')]",
-        "nicName": "[concat(variables('tenantName'), 'nic')]"
+        "vmSizeMongoDb": "Standard_A0",
+        "vmNameMongoDb": "[concat(variables('tenantName'), 'mongodb')]",
+        "vmSizeGraphite": "Standard_A0",
+        "vmNameGraphite": "[concat(variables('tenantName'), 'graphite')]",
+        "publicIPAddressNameBase": "[concat(variables('tenantName'), 'pip')]",
+        "nicNameBase": "[concat(variables('tenantName'), 'nic')]"
     },
     "resources": [
         {
@@ -43,16 +48,16 @@
                 },
                 "parameters": {
                     "newStorageAccountName": {
-                        "value": "[variables('newStorageAccountName')]"
+                        "value": "[concat(variables('vmStorageAccountNameBase'), 'mongo')]"
                     },
                     "adminUsername": {
-                        "value": "[variables('adminUsername')]"
+                        "value": "[variables('mongoAdminUsername')]"
                     },
                     "adminPassword": {
-                        "value": "[variables('adminPassword')]"
+                        "value": "[variables('mongoAdminPassword')]"
                     },
                     "dnsNameForPublicIP": {
-                        "value": "[variables('dnsNameForPublicIP')]"
+                        "value": "[concat(variables('dnsNameForPublicIPBase'),'mongo')]"
                     },
                     "location": {
                         "value": "[variables('location')]"
@@ -61,16 +66,60 @@
                         "value": "[variables('virtualNetworkName')]"
                     },
                     "vmSize": {
-                        "value": "[variables('vmSize')]"
+                        "value": "[variables('vmSizeMongoDb')]"
                     },
                     "vmName": {
-                        "value": "[variables('vmName')]"
+                        "value": "[variables('vmNameMongoDb')]"
                     },
                     "publicIPAddressName": {
-                        "value": "[variables('publicIPAddressName')]"
+                        "value": "[concat(variables('publicIPAddressNameBase'),'mongo')]"
                     },
                     "nicName": {
-                        "value": "[variables('nicName')]"
+                        "value": "[concat(variables('nicNameBase'),'mongo')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "graphite-resource",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('graphitetemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "newStorageAccountName": {
+                        "value": "[concat(variables('vmStorageAccountNameBase'),'graphite')]"
+                    },
+                    "adminUsername": {
+                        "value": "[variables('graphiteAdminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[variables('graphiteAdminPassword')]"
+                    },
+                    "dnsNameForPublicIP": {
+                        "value": "[concat(variables('dnsNameForPublicIPBase'),'graphite')]"
+                    },
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "virtualNetworkName": {
+                        "value": "[variables('virtualNetworkName')]"
+                    },
+                    "vmSize": {
+                        "value": "[variables('vmSizeGraphite')]"
+                    },
+                    "vmName": {
+                        "value": "[variables('vmNameGraphite')]"
+                    },
+                    "publicIPAddressName": {
+                        "value": "[concat(variables('publicIPAddressNameBase'),'graphite')]"
+                    },
+                    "nicName": {
+                        "value": "[concat(variables('nicNameBase'),'graphite')]"
                     }
                 }
             }
