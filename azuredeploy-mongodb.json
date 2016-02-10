@@ -65,7 +65,7 @@
         "vmName": "[concat(parameters('baseName'),'mongo-vm')]",
         "nicName": "[concat(parameters('baseName'),'mongo-nic')]",
         "vnetID": "parameters('virtualNetworkRef')]",
-        "subnet1Ref": "[concat(variables('vnetID'),'/subnets/',variables('Subnet-1'))]",
+        "subnet1Ref": "[concat(variables('vnetID'),'/subnets/','Subnet-1')]",
         "startupScriptUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/mongo-install-ubuntu.sh"
     },
     "resources": [

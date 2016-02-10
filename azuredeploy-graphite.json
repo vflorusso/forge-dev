@@ -68,7 +68,7 @@
         "vmStorageAccountContainerName": "vhds",
         "storageAccountType": "Standard_LRS",
         "vnetID": "parameters('virtualNetworkRef')]",
-        "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('Subnet-3'))]"
+        "subnetRef": "[concat(variables('vnetID'),'/subnets/','Subnet-3')]"
     },
     "resources": [
         {
