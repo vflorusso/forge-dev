@@ -1,0 +1,23 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "namespaceName": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
+        },
+    },
+    "resources": [
+        {
+            "apiVersion": "2014-09-01",
+            "name": "[parameters('namespaceName')]",
+            "type": "Microsoft.ServiceBus/namespaces",
+            "location": "[parameters('location')]",
+            "properties": {
+                "region": "[parameters('location')]"
+            }
+        }
+    ]
+}
