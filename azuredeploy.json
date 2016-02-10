@@ -18,28 +18,50 @@
         "distributionappname": "[concat(variables('tenantName'), 'distribution')]",
         "frontendappname": "[concat(variables('tenantName'), 'fe')]",
         "backendappname": "[concat(variables('tenantName'), 'be')]",
+        "vnettemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-vnet.json",
         "mongotemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-mongodb.json",
         "graphitetemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-graphite.json",
-        "vmStorageAccountNameBase": "[concat(variables('tenantName'), 'stg')]",
         "mongoAdminUsername": "[concat(variables('tenantName'), 'admin')]",
         "mongoAdminPassword": "[concat(variables('tenantName'), 'pwd.01')]",
         "graphiteAdminUsername": "[concat(variables('tenantName'), 'admin')]",
         "graphiteAdminPassword": "[concat(variables('tenantName'), 'pwd.01')]",
-        "dnsNameForPublicIPBase": "[concat(variables('tenantName'), 'mongodns')]",
         "location": "West Europe",
         "virtualNetworkName": "[concat(variables('tenantName'), 'vnet')]",
+        "virtualNetworkAddressPrefix": "10.0.0.0/16",
         "vmSizeMongoDb": "Standard_A0",
-        "vmNameMongoDb": "[concat(variables('tenantName'), 'mongodb')]",
-        "vmSizeGraphite": "Standard_A0",
-        "vmNameGraphite": "[concat(variables('tenantName'), 'graphite')]",
-        "publicIPAddressNameBase": "[concat(variables('tenantName'), 'pip')]",
-        "nicNameBase": "[concat(variables('tenantName'), 'nic')]"
+        "vmSizeGraphite": "Standard_A0"
     },
     "resources": [
+        {
+            "name": "vnet-resource",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('vnettemplateUrl')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "vnetName": {
+                        "value": "[variables('virtualNetworkName')]"
+                    },
+                    "vnetAddressPrefix": {
+                        "value": "[variables('virtualNetworkAddressPrefix')]"
+                    }
+                }
+            }
+        },
         {
             "name": "mongo-db-resource",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
+            "dependson": [
+                "[concat('Microsoft.Resources/deployments/', 'vnet-resource')]"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -47,35 +69,23 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "newStorageAccountName": {
-                        "value": "[concat(variables('vmStorageAccountNameBase'), 'mongo')]"
-                    },
                     "adminUsername": {
                         "value": "[variables('mongoAdminUsername')]"
                     },
                     "adminPassword": {
                         "value": "[variables('mongoAdminPassword')]"
                     },
-                    "dnsNameForPublicIP": {
-                        "value": "[concat(variables('dnsNameForPublicIPBase'),'mongo')]"
+                    "baseName": {
+                        "value": "[variables('tenantName')]"
                     },
                     "location": {
                         "value": "[variables('location')]"
                     },
-                    "virtualNetworkName": {
-                        "value": "[variables('virtualNetworkName')]"
+                    "virtualNetworkRef": {
+                        "value":  "[reference('vnet-resource').outputs.virtualNetworkReference.value]"
                     },
                     "vmSize": {
                         "value": "[variables('vmSizeMongoDb')]"
-                    },
-                    "vmName": {
-                        "value": "[variables('vmNameMongoDb')]"
-                    },
-                    "publicIPAddressName": {
-                        "value": "[concat(variables('publicIPAddressNameBase'),'mongo')]"
-                    },
-                    "nicName": {
-                        "value": "[concat(variables('nicNameBase'),'mongo')]"
                     }
                 }
             }
@@ -84,6 +94,9 @@
             "name": "graphite-resource",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
+            "dependson": [
+                "[concat('Microsoft.Resources/deployments/', 'vnet-resource')]"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -91,35 +104,23 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "newStorageAccountName": {
-                        "value": "[concat(variables('vmStorageAccountNameBase'),'graphite')]"
-                    },
                     "adminUsername": {
                         "value": "[variables('graphiteAdminUsername')]"
                     },
                     "adminPassword": {
                         "value": "[variables('graphiteAdminPassword')]"
                     },
-                    "dnsNameForPublicIP": {
-                        "value": "[concat(variables('dnsNameForPublicIPBase'),'graphite')]"
+                    "baseName": {
+                        "value": "[variables('tenantName')]"
                     },
                     "location": {
                         "value": "[variables('location')]"
                     },
-                    "virtualNetworkName": {
-                        "value": "[variables('virtualNetworkName')]"
+                    "virtualNetworkRef": {
+                        "value":  "[reference('vnet-resource').outputs.virtualNetworkReference.value]"
                     },
                     "vmSize": {
                         "value": "[variables('vmSizeGraphite')]"
-                    },
-                    "vmName": {
-                        "value": "[variables('vmNameGraphite')]"
-                    },
-                    "publicIPAddressName": {
-                        "value": "[concat(variables('publicIPAddressNameBase'),'graphite')]"
-                    },
-                    "nicName": {
-                        "value": "[concat(variables('nicNameBase'),'graphite')]"
                     }
                 }
             }
@@ -187,6 +188,5 @@
                 "serverFarmId": "[variables('serverFarmName')]"
             }
         }
-       
     ]
 }
