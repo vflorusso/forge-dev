@@ -109,12 +109,13 @@
             }
         },
         {
-            "apiVersion": "2015-08-01",
+            "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/virtualNetworks/subnets",
             "name": "[concat(parameters('virtualNetworkName'), '/', variables('subnetName'))]",
             "location": "[parameters('location')]",
             "properties": {
-                "addressPrefix": "[variables('subnetPrefix')]"
+                "addressPrefix": "[variables('subnetPrefix')]",
+                "publicIPAllocationMethod": "Static" 
             }
         },
         {
@@ -123,7 +124,8 @@
             "name": "[parameters('nicName')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]"
+                "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]",
+                "[concat('Microsoft.Network/virtualNetworks/subnets/', variables('subnetName'))]"   
             ],
             "properties": {
                 "ipConfigurations": [
