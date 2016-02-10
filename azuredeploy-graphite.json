@@ -2,10 +2,10 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "newStorageAccountName": {
+        "baseName": {
             "type": "string",
             "metadata": {
-                "description": "Unique DNS Name for the Storage Account where the Virtual Machine's disks will be placed."
+                "description": "Used to create unique resource name"
             }
         },
         "location": {
@@ -33,31 +33,12 @@
                 "description": "Password for the Virtual Machine."
             }
         },
-        "dnsNameForPublicIP": {
-            "type": "string",
-            "metadata": {
-                "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
-            }
-        },
         "vmSize": {
             "type": "string",
             "defaultValue": "Standard_A0"
         },
-        "publicIPAddressName": {
-            "type": "string",
-            "defaultValue": "myPublicIP"
-        },
-        "vmName": {
-            "type": "string",
-            "defaultValue": "myLinuxVM"
-        },
-        "virtualNetworkName": {
-            "type": "string",
-            "defaultValue": "myVNET"
-        },
-        "nicName": {
-            "type": "string",
-            "defaultValue": "myNIC"
+        "virtualNetworkRef": {
+            "type": "string"
         },
         "ubuntuOSVersion": {
             "type": "string",
@@ -73,23 +54,26 @@
         }
     },
     "variables": {
+        "apiversion": "2015-06-15",
         "imagePublisher": "Canonical",
         "imageOffer": "UbuntuServer",
         "OSDiskName": "osdiskfordockersimple",
         "extensionName": "DockerExtension",
-        "addressPrefix": "10.0.0.0/16",
-        "subnetName": "Subnet-3",
-        "subnetPrefix": "10.0.2.0/24",
-        "storageAccountType": "Standard_LRS",
+        "vmName": "[concat(parameters('baseName'),'graphite-vm')]",
         "publicIPAddressType": "Dynamic",
+        "publicIPAddressName": "[concat(parameters('baseName'),'graphite-pip')]",
+        "dnsNameForPublicIP": "[concat(parameters('baseName'),'graphite-dns')]",
+        "nicName": "[concat(parameters('baseName'),'graphite-nic')]",
+        "newStorageAccountName": "[concat(parameters('baseName'),'graphite-storage')]",
         "vmStorageAccountContainerName": "vhds",
-        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
-        "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
+        "storageAccountType": "Standard_LRS",
+        "vnetID": "parameters('virtualNetworkRef')]",
+        "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('Subnet-3'))]"
     },
     "resources": [
         {
             "type": "Microsoft.Storage/storageAccounts",
-            "name": "[parameters('newStorageAccountName')]",
+            "name": "[variables('newStorageAccountName')]",
             "apiVersion": "2015-05-01-preview",
             "location": "[parameters('location')]",
             "properties": {
@@ -99,33 +83,22 @@
         {
             "apiVersion": "2015-05-01-preview",
             "type": "Microsoft.Network/publicIPAddresses",
-            "name": "[parameters('publicIPAddressName')]",
+            "name": "[variables('publicIPAddressName')]",
             "location": "[parameters('location')]",
             "properties": {
                 "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
                 "dnsSettings": {
-                    "domainNameLabel": "[parameters('dnsNameForPublicIP')]"
+                    "domainNameLabel": "[variables('dnsNameForPublicIP')]"
                 }
             }
         },
         {
             "apiVersion": "2015-06-15",
-            "type": "Microsoft.Network/virtualNetworks/subnets",
-            "name": "[concat(parameters('virtualNetworkName'), '/', variables('subnetName'))]",
-            "location": "[parameters('location')]",
-            "properties": {
-                "addressPrefix": "[variables('subnetPrefix')]",
-                "publicIPAllocationMethod": "Static" 
-            }
-        },
-        {
-            "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[parameters('nicName')]",
+            "name": "[variables('nicName')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]",
-                "[concat(variables('vnetID'),'/subnets/', variables('subnetName'))]"
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -134,7 +107,7 @@
                         "properties": {
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('publicIPAddressName'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
                             },
                             "subnet": {
                                 "id": "[variables('subnetRef')]"
@@ -147,18 +120,18 @@
         {
             "apiVersion": "2015-05-01-preview",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[parameters('vmName')]",
+            "name": "[variables('vmName')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[concat('Microsoft.Storage/storageAccounts/', parameters('newStorageAccountName'))]",
-                "[concat('Microsoft.Network/networkInterfaces/', parameters('nicName'))]"
+                "[concat('Microsoft.Storage/storageAccounts/', variables('newStorageAccountName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
             ],
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[parameters('vmSize')]"
                 },
                 "osProfile": {
-                    "computerName": "[parameters('vmName')]",
+                    "computerName": "[variables('vmName')]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]"
                 },
@@ -172,7 +145,7 @@
                     "osDisk": {
                         "name": "osdisk1",
                         "vhd": {
-                            "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]"
+                            "uri": "[concat('http://',variables('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]"
                         },
                         "caching": "ReadWrite",
                         "createOption": "FromImage"
@@ -181,7 +154,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',parameters('nicName'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
                         }
                     ]
                 }
@@ -189,11 +162,11 @@
         },
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(parameters('vmName'),'/', variables('extensionName'))]",
+            "name": "[concat(variables('vmName'),'/', variables('extensionName'))]",
             "apiVersion": "2015-05-01-preview",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+                "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
             ],
             "properties": {
                 "publisher": "Microsoft.Azure.Extensions",
