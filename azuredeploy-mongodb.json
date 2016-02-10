@@ -56,7 +56,7 @@
     },
     "variables": {
         "apiversion": "2015-06-15",
-        "newStorageAccountName": "[concat(parameters('baseName'),'mongostorage')]",
+        "newStorageAccountName": "[concat(parameters('baseName'),'mongostg')]",
         "vmStorageAccountContainerName": "vhds",
         "storageAccountType": "Standard_LRS",
         "publicIPAddressName": "[concat(parameters('baseName'),'mongo-pip')]",

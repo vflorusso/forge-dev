@@ -64,7 +64,7 @@
         "publicIPAddressName": "[concat(parameters('baseName'),'graphite-pip')]",
         "dnsNameForPublicIP": "[concat(parameters('baseName'),'graphite-dns')]",
         "nicName": "[concat(parameters('baseName'),'graphite-nic')]",
-        "newStorageAccountName": "[concat(parameters('baseName'),'graphitestorage')]",
+        "newStorageAccountName": "[concat(parameters('baseName'),'graphitestg')]",
         "vmStorageAccountContainerName": "vhds",
         "storageAccountType": "Standard_LRS",
         "vnetID": "[parameters('virtualNetworkRef')]",
