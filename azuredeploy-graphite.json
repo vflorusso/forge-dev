@@ -125,7 +125,7 @@
             "location": "[parameters('location')]",
             "dependsOn": [
                 "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]",
-                "[concat('Microsoft.Network/virtualNetworks/subnets/', variables('subnetName'))]"   
+                "[concat(variables('vnetID'),'/subnets/', variables('subnetName'))]"
             ],
             "properties": {
                 "ipConfigurations": [
