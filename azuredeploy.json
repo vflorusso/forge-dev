@@ -18,7 +18,7 @@
         "distributionappname": "[concat(variables('tenantName'), 'distribution')]",
         "frontendappname": "[concat(variables('tenantName'), 'fe')]",
         "backendappname": "[concat(variables('tenantName'), 'be')]",
-        "mongotemplateUrl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/mongodb-on-ubuntu/azuredeploy.json",
+        "mongotemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-mongodb.json",
         "graphitetemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-graphite.json",
         "vmStorageAccountNameBase": "[concat(variables('tenantName'), 'stg')]",
         "mongoAdminUsername": "[concat(variables('tenantName'), 'admin')]",
