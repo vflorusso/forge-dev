@@ -13,7 +13,7 @@
 		}
 	},
 	"variables": {
-		"namespaceName": "[concat(parameters('baseName'),'-sb')]"
+		"namespaceName": "[concat(parameters('baseName'),'sb')]"
 	},
 	"resources": [
 		{
