@@ -67,7 +67,7 @@
 		"nicName": "[concat(parameters('baseName'),'mongo-nic')]",
 		"vnetID": "[parameters('virtualNetworkRef')]",
 		"subnet1Ref": "[concat(variables('vnetID'),'/subnets/','Subnet-1')]",
-		"startupScriptUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/mongo-install-ubuntu.sh",
+		"startupScriptUrl": "[uri(deployment().properties.templateLink.uri, 'mongo-install-ubuntu.sh')]",
 		"mongoConnectionString": "[concat('mongodb://', concat(variables('dnsNameForPublicIP'), '.westeurope.cloudapp.azure.com:27017/') )]"
 	},
 	"resources": [
