@@ -61,13 +61,14 @@
 		"vmStorageAccountContainerName": "vhds",
 		"storageAccountType": "Standard_LRS",
 		"publicIPAddressName": "[concat(parameters('baseName'),'mongo-pip')]",
-		"dnsNameForPublicIP": "[concat(parameters('baseName'),'mongo-dns')]",
+		"dnsNameForPublicIP": "[concat(parameters('baseName'),'-mongodb')]",
 		"publicIPAddressType": "Dynamic",
 		"vmName": "[concat(parameters('baseName'),'mongo-vm')]",
 		"nicName": "[concat(parameters('baseName'),'mongo-nic')]",
 		"vnetID": "[parameters('virtualNetworkRef')]",
 		"subnet1Ref": "[concat(variables('vnetID'),'/subnets/','Subnet-1')]",
-		"startupScriptUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/mongo-install-ubuntu.sh"
+		"startupScriptUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/mongo-install-ubuntu.sh",
+		"mongoConnectionString": "[concat('mongodb://', concat(variables('dnsNameForPublicIP'), '.westeurope.cloudapp.azure.com:27017/') )]"
 	},
 	"resources": [
 		{
@@ -220,5 +221,11 @@
 				}
 			}
 		}
-	]
+	],
+	"outputs": {
+		"mongoConnectionString": {
+			"type": "string",
+			"value": "[variables('mongoConnectionString')]"
+		}
+	}
 }

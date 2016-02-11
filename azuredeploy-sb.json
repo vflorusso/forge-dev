@@ -1,41 +1,39 @@
 {
-    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-        "namespaceName": {
-            "type": "string"
-        },
-        "location": {
-            "type": "string"
-        },
-    },
-    "variables": 
-        {
-            "sbVersion": "[providers('Microsoft.ServiceBus', 'namespaces').apiVersions[0]]",
-            "defaultSASKeyName": "RootManageSharedAccessKey",
-            "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('namespaceName'), variables('defaultSASKeyName'))]"
-            
-        },
-    
-    "resources": [
-        {
-            "apiVersion": "[variables('sbVersion')]",
-            "name": "[parameters('namespaceName')]",
-            "type": "Microsoft.ServiceBus/namespaces",
-            "location": "[parameters('location')]",
-            "properties": {
-                "region": "[parameters('location')]"
-            }
-        }
-    ],
-    "outputs": {
-        "NamespaceConnectionString": {
-            "type": "string",
-            "value": "[listkeys(variables('authRuleResourceId'), variables('sbVersion')).primaryConnectionString]"
-        },
-        "SharedAccessPolicyPrimaryKey": {
-            "type": "string",
-            "value": "[listkeys(variables('authRuleResourceId'), variables('sbVersion')).primaryKey]"
-        }
-    }
+	"$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"baseName": {
+			"type": "string"
+		},
+		"location": {
+			"type": "string"
+		}
+	},
+	"variables": {
+		"sbVersion": "[providers('Microsoft.ServiceBus', 'namespaces').apiVersions[0]]",
+		"defaultSASKeyName": "RootManageSharedAccessKey",
+		"namespaceName": "[concat(parameters('baseName'), 'bus')]",
+		"authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('namespaceName'), variables('defaultSASKeyName'))]"
+	},
+	"resources": [
+		{
+			"apiVersion": "[variables('sbVersion')]",
+			"name": "[variables('namespaceName')]",
+			"type": "Microsoft.ServiceBus/namespaces",
+			"location": "[parameters('location')]",
+			"properties": {
+				"region": "[parameters('location')]"
+			}
+		}
+	],
+	"outputs": {
+		"namespaceConnectionString": {
+			"type": "string",
+			"value": "[listkeys(variables('authRuleResourceId'), variables('sbVersion')).primaryConnectionString]"
+		},
+		"SharedAccessPolicyPrimaryKey": {
+			"type": "string",
+			"value": "[listkeys(variables('authRuleResourceId'), variables('sbVersion')).primaryKey]"
+		}
+	}
 }

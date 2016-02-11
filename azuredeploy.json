@@ -4,29 +4,61 @@
 	"parameters": {
 		"tenantName": {
 			"type": "string",
+			"minLength": 3,
+			"maxLength": 6,
 			"metadata": {
-				"description": "Name of the Tenant"
+				"description": "Name of the Tenant (3 to 6 chars)"
 			}
+		},
+		"vmUser": {
+			"type": "string",
+			"defaultValue": "webplu",
+			"metadata": {
+				"description": "Virtual Machine User"
+			}
+		},
+		"vmPassword": {
+			"type": "string",
+			"metadata": {
+				"description": "Virtual Machine Password"
+			}
+		},
+		"guiShellApiSecret": {
+			"type": "string",
+			"defaultValue": "MYSECRET",
+			"metadata": {
+				"description": "GUIShell API secret"
+			}
+		},
+		"location": {
+			"type": "string",
+			"defaultValue": "West Europe",
+			"metadata": {
+				"description": "The location where resources will be deployed."
+			},
+			"allowedValues": [
+				"West US",
+				"East US",
+				"Southeast Asia",
+				"East Asia",
+				"West Europe"
+			]
 		}
 	},
 	"variables": {
 		"cdnApiVersion": "2015-06-01",
-		"webAppApiVersion": "2015-08-01",
 		"tenantName": "[parameters('tenantName')]",
-		"serverFarmName": "[concat(variables('tenantName'), 'farm')]",
-		"guishellappname": "[concat(variables('tenantName'), 'gui')]",
-		"distributionappname": "[concat(variables('tenantName'), 'distribution')]",
-		"frontendappname": "[concat(variables('tenantName'), 'fe')]",
-		"backendappname": "[concat(variables('tenantName'), 'be')]",
-		"vnettemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-vnet.json",
-		"mongotemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-mongodb.json",
-		"graphitetemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-graphite.json",
-		"servicebustemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-sb.json",
-		"mongoAdminUsername": "[concat(variables('tenantName'), 'admin')]",
-		"mongoAdminPassword": "[concat(variables('tenantName'), 'pwd.01')]",
-		"graphiteAdminUsername": "[concat(variables('tenantName'), 'admin')]",
-		"graphiteAdminPassword": "[concat(variables('tenantName'), 'pwd.01')]",
-		"location": "West Europe",
+		"vnetTemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-vnet.json",
+		"mongoTemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-mongodb.json",
+		"graphiteTemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-graphite.json",
+		"serviceBusTemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-sb.json",
+		"appServicesTemplateUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/azuredeploy-appservice.json",
+		"mongoAdminUsername": "[parameters('vmUser')]",
+		"mongoAdminPassword": "[parameters('vmPassword')]",
+		"graphiteAdminUsername": "[parameters('vmUser')]",
+		"graphiteAdminPassword": "[parameters('vmPassword')]",
+		"guiShellApiSecret": "[parameters('guiShellApiSecret')]",
+		"location": "[parameters('location')]",
 		"virtualNetworkName": "[concat(variables('tenantName'), 'vnet')]",
 		"virtualNetworkAddressPrefix": "10.0.0.0/16",
 		"vmSizeMongoDb": "Standard_A0",
@@ -40,7 +72,7 @@
 			"properties": {
 				"mode": "Incremental",
 				"templateLink": {
-					"uri": "[variables('vnettemplateUrl')]",
+					"uri": "[variables('vnetTemplateUrl')]",
 					"contentVersion": "1.0.0.0"
 				},
 				"parameters": {
@@ -66,7 +98,7 @@
 			"properties": {
 				"mode": "Incremental",
 				"templateLink": {
-					"uri": "[variables('mongotemplateUrl')]",
+					"uri": "[variables('mongoTemplateUrl')]",
 					"contentVersion": "1.0.0.0"
 				},
 				"parameters": {
@@ -101,7 +133,7 @@
 			"properties": {
 				"mode": "Incremental",
 				"templateLink": {
-					"uri": "[variables('graphitetemplateUrl')]",
+					"uri": "[variables('graphiteTemplateUrl')]",
 					"contentVersion": "1.0.0.0"
 				},
 				"parameters": {
@@ -135,7 +167,7 @@
 			"properties": {
 				"mode": "Incremental",
 				"templateLink": {
-					"uri": "[variables('servicebustemplateUrl')]",
+					"uri": "[variables('serviceBusTemplateUrl')]",
 					"contentVersion": "1.0.0.0"
 				},
 				"parameters": {
@@ -149,66 +181,36 @@
 			}
 		},
 		{
-			"name": "[variables('serverFarmName')]",
-			"type": "Microsoft.Web/serverfarms",
-			"apiVersion": "[variables('webAppApiVersion')]",
-			"location": "[resourceGroup().location]",
-			"sku": {
-				"name": "B1",
-				"tier": "Basic",
-				"capacity": 1
-			}
-		},
-		{
-			"name": "[variables('distributionappname')]",
-			"type": "Microsoft.Web/sites",
-			"location": "[resourceGroup().location]",
-			"apiVersion": "[variables('webAppApiVersion')]",
-			"dependsOn": [
-				"[concat('Microsoft.Web/serverfarms/', variables('serverFarmName'))]"
+			"name": "appservice-resources",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2015-01-01",
+			"dependson": [
+				"[concat('Microsoft.Resources/deployments/', 'mongo-db-resource')]",
+				"[concat('Microsoft.Resources/deployments/', 'servicebus-resource')]"
 			],
 			"properties": {
-				"name": "[variables('distributionappname')]",
-				"serverFarmId": "[variables('serverFarmName')]"
-			}
-		},
-		{
-			"name": "[variables('frontendappname')]",
-			"type": "Microsoft.Web/sites",
-			"location": "[resourceGroup().location]",
-			"apiVersion": "[variables('webAppApiVersion')]",
-			"dependsOn": [
-				"[concat('Microsoft.Web/serverfarms/', variables('serverFarmName'))]"
-			],
-			"properties": {
-				"name": "[variables('frontendappname')]",
-				"serverFarmId": "[variables('serverFarmName')]"
-			}
-		},
-		{
-			"name": "[variables('backendappname')]",
-			"type": "Microsoft.Web/sites",
-			"location": "[resourceGroup().location]",
-			"apiVersion": "[variables('webAppApiVersion')]",
-			"dependsOn": [
-				"[concat('Microsoft.Web/serverfarms/', variables('serverFarmName'))]"
-			],
-			"properties": {
-				"name": "[variables('backendappname')]",
-				"serverFarmId": "[variables('serverFarmName')]"
-			}
-		},
-		{
-			"name": "[variables('guishellappname')]",
-			"type": "Microsoft.Web/sites",
-			"location": "[resourceGroup().location]",
-			"apiVersion": "[variables('webAppApiVersion')]",
-			"dependsOn": [
-				"[concat('Microsoft.Web/serverfarms/', variables('serverFarmName'))]"
-			],
-			"properties": {
-				"name": "[variables('guishellappname')]",
-				"serverFarmId": "[variables('serverFarmName')]"
+				"mode": "Incremental",
+				"templateLink": {
+					"uri": "[variables('appServicesTemplateUrl')]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"baseName": {
+						"value": "[variables('tenantName')]"
+					},
+					"location": {
+						"value": "[variables('location')]"
+					},
+					"guiShellApiSecret": {
+						"value": "[variables('guiShellApiSecret')]"
+					},
+					"guiShellMongoConnectionString": {
+						"value": "[concat(reference('mongo-db-resource').outputs.mongoConnectionString.value, 'guishell')]"
+					},
+					"serviceBusConnection": {
+						"value": "[reference('servicebus-resource').outputs.namespaceConnectionString.value]"
+					}
+				}
 			}
 		}
 	]

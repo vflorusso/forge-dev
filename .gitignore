@@ -47,6 +47,5 @@ Temporary Items
 .apdisk
 
 .vs
-azuredeploy.parameters.json
-deploy-forge.ps1
-azuredeploy.parameters.json
+*.parameters.json
+*.user

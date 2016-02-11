@@ -48,7 +48,6 @@
 			},
 			"allowedValues": [
 				"14.04.2-LTS",
-				"14.04-DAILY",
 				"15.10"
 			]
 		}
@@ -62,7 +61,7 @@
 		"vmName": "[concat(parameters('baseName'),'graphite-vm')]",
 		"publicIPAddressType": "Dynamic",
 		"publicIPAddressName": "[concat(parameters('baseName'),'graphite-pip')]",
-		"dnsNameForPublicIP": "[concat(parameters('baseName'),'graphite-dns')]",
+		"dnsNameForPublicIP": "[concat(parameters('baseName'),'-graphite')]",
 		"nicName": "[concat(parameters('baseName'),'graphite-nic')]",
 		"newStorageAccountName": "[concat(parameters('baseName'),'graphitestg')]",
 		"securityGroupName": "[concat(parameters('baseName'),'graphitesecgrp')]",
