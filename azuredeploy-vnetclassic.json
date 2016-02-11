@@ -1,0 +1,58 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Deployment location"
+            }
+        },
+        "vnetName": {
+            "type": "string",
+            "defaultValue": "ClassicVNet1",
+            "metadata": {
+                "description": "VNet name"
+            }
+        },
+        "vnetAddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/16",
+            "metadata": {
+                "description": "Address prefix"
+            }
+        }
+    },
+    "variables": {
+        "apiVersion": "2015-06-01",
+        "subnet1Name": "AppServiceSubnet-1",
+        "subnet1Prefix": "10.0.0.0/24"
+    },
+    "resources": [
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.ClassicNetwork/virtualNetworks",
+            "name": "[parameters('vnetName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('vnetAddressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnet1Name')]",
+                        "addressPrefix": "[variables('subnet1Prefix')]"
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "virtualNetworkReference": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.ClassicNetwork/virtualNetworks',parameters('vnetName'))]"
+        }
+    }
+}
