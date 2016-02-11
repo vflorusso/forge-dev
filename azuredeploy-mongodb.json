@@ -1,225 +1,224 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "newStorageAccountName": {
-      "type": "string"
-    },
-    "dnsNameForPublicIP": {
-      "type": "string"
-    },
-    "adminUserName": {
-      "type": "string"
-    },
-    "adminPassword": {
-      "type": "securestring"
-    },
-    "imagePublisher": {
-      "type": "string",
-      "defaultValue": "Canonical",
-      "metadata": {
-        "description": "Image Publisher"
-      }
-    },
-    "imageOffer": {
-      "type": "string",
-      "defaultValue": "UbuntuServer",
-      "metadata": {
-        "description": "Image Offer"
-      }
-    },
-    "imageSKU": {
-      "type": "string",
-      "defaultValue": "14.04.2-LTS",
-      "metadata": {
-        "description": "Image SKU"
-      }
-    },
-    "location": {
-      "type": "string",
-      "defaultValue": "West US",
-      "allowedValues": [
-        "East US",
-        "West US",
-        "West Europe",
-        "East Asia",
-        "South East Asia"
-      ],
-      "metadata": {
-        "description": "Deployment location"
-      }
-    },
-    "vmSize": {
-      "type": "string",
-      "defaultValue": "Standard_A0"
-    },
-    "publicIPAddressName": {
-      "type": "string",
-      "defaultValue": "myPublicIP"
-    },
-    "vmName": {
-      "type": "string",
-      "defaultValue": "myLinuxVM"
-    },
-    "virtualNetworkName": {
-      "type": "string",
-      "defaultValue": "myVNET"
-    },
-    "nicName": {
-      "type": "string",
-      "defaultValue": "myNIC"
-    }
-  },
-  "variables": {
-    "addressPrefix": "10.0.0.0/16",
-    "subnet1Name": "Subnet-1",
-    "subnet2Name": "Subnet-2",
-    "subnet1Prefix": "10.0.0.0/24",
-    "subnet2Prefix": "10.0.1.0/24",
-    "vmStorageAccountContainerName": "vhds",
-    "publicIPAddressType": "Dynamic",
-    "storageAccountType": "Standard_LRS",
-    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
-    "subnet1Ref": "[concat(variables('vnetID'),'/subnets/',variables('subnet1Name'))]",
-    "startupScriptUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/mongo-install-ubuntu.sh"
-  },
-  "resources": [
-    {
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[parameters('newStorageAccountName')]",
-      "apiVersion": "2015-05-01-preview",
-      "location": "[parameters('location')]",
-      "properties": {
-        "accountType": "[variables('storageAccountType')]"
-      }
-    },
-    {
-      "apiVersion": "2015-05-01-preview",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[parameters('publicIPAddressName')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('dnsNameForPublicIP')]"
-        }
-      }
-    },
-    {
-      "apiVersion": "2015-05-01-preview",
-      "type": "Microsoft.Network/virtualNetworks",
-      "name": "[parameters('virtualNetworkName')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[variables('addressPrefix')]"
-          ]
-        },
-        "subnets": [
-          {
-            "name": "[variables('subnet1Name')]",
-            "properties": {
-              "addressPrefix": "[variables('subnet1Prefix')]"
-            }
-          },
-          {
-            "name": "[variables('subnet2Name')]",
-            "properties": {
-              "addressPrefix": "[variables('subnet2Prefix')]"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "apiVersion": "2015-05-01-preview",
-      "type": "Microsoft.Network/networkInterfaces",
-      "name": "[parameters('nicName')]",
-      "location": "[parameters('location')]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]",
-        "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]"
-      ],
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('publicIPAddressName'))]"
-              },
-              "subnet": {
-                "id": "[variables('subnet1Ref')]"
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "apiVersion": "2015-05-01-preview",
-      "type": "Microsoft.Compute/virtualMachines",
-      "name": "[parameters('vmName')]",
-      "location": "[parameters('location')]",
-      "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/', parameters('newStorageAccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', parameters('nicName'))]"
-      ],
-      "properties": {
-        "hardwareProfile": {
-          "vmSize": "[parameters('vmSize')]"
-        },
-        "osProfile": {
-          "computerName": "[parameters('vmName')]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
-        },
-        "storageProfile": {
-          "imageReference": {
-            "publisher": "[parameters('imagePublisher')]",
-            "offer": "[parameters('imageOffer')]",
-            "sku": "[parameters('imageSKU')]",
-            "version": "latest"
-          },
-          "osDisk": {
-            "name": "osdisk1",
-            "vhd": {
-              "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/','osdisk1spec.vhd')]"
-            },
-            "caching": "ReadWrite",
-            "createOption": "FromImage"
-          }
-        },
-        "networkProfile": {
-          "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',parameters('nicName'))]"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('vmName'),'/installmongo')]",
-      "apiVersion": "2015-05-01-preview",
-      "location": "[parameters('location')]",
-      "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
-      ],
-      "properties": {
-        "publisher": "Microsoft.OSTCExtensions",
-        "type": "CustomScriptForLinux",
-        "typeHandlerVersion": "1.2",
-        "settings": {
-          "fileUris": [
-            "[variables('startupScriptUrl')]"
-          ],
-          "commandToExecute": "sh mongo-install-ubuntu.sh"
-        }
-      }
-    }
-  ]
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"baseName": {
+			"type": "string"
+		},
+		"virtualNetworkRef": {
+			"type": "string"
+		},
+		"adminUserName": {
+			"type": "string"
+		},
+		"adminPassword": {
+			"type": "securestring"
+		},
+		"imagePublisher": {
+			"type": "string",
+			"defaultValue": "Canonical",
+			"metadata": {
+				"description": "Image Publisher"
+			}
+		},
+		"imageOffer": {
+			"type": "string",
+			"defaultValue": "UbuntuServer",
+			"metadata": {
+				"description": "Image Offer"
+			}
+		},
+		"imageSKU": {
+			"type": "string",
+			"defaultValue": "14.04.2-LTS",
+			"metadata": {
+				"description": "Image SKU"
+			}
+		},
+		"location": {
+			"type": "string",
+			"defaultValue": "West US",
+			"allowedValues": [
+				"East US",
+				"West US",
+				"West Europe",
+				"East Asia",
+				"South East Asia"
+			],
+			"metadata": {
+				"description": "Deployment location"
+			}
+		},
+		"vmSize": {
+			"type": "string",
+			"defaultValue": "Standard_A0"
+		}
+	},
+	"variables": {
+		"apiversion": "2015-06-15",
+		"newStorageAccountName": "[concat(parameters('baseName'),'mongostg')]",
+		"securityGroupName": "[concat(parameters('baseName'),'mongosecgrp')]",
+		"vmStorageAccountContainerName": "vhds",
+		"storageAccountType": "Standard_LRS",
+		"publicIPAddressName": "[concat(parameters('baseName'),'mongo-pip')]",
+		"dnsNameForPublicIP": "[concat(parameters('baseName'),'mongo-dns')]",
+		"publicIPAddressType": "Dynamic",
+		"vmName": "[concat(parameters('baseName'),'mongo-vm')]",
+		"nicName": "[concat(parameters('baseName'),'mongo-nic')]",
+		"vnetID": "[parameters('virtualNetworkRef')]",
+		"subnet1Ref": "[concat(variables('vnetID'),'/subnets/','Subnet-1')]",
+		"startupScriptUrl": "https://raw.githubusercontent.com/vflorusso/forge-dev/master/mongo-install-ubuntu.sh"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.Storage/storageAccounts",
+			"name": "[variables('newStorageAccountName')]",
+			"apiVersion": "[variables('apiversion')]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"accountType": "[variables('storageAccountType')]"
+			}
+		},
+		{
+			"apiVersion": "[variables('apiversion')]",
+			"type": "Microsoft.Network/publicIPAddresses",
+			"name": "[variables('publicIPAddressName')]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"publicIPAllocationMethod": "[variables('publicIPAddressType')]",
+				"dnsSettings": {
+					"domainNameLabel": "[variables('dnsNameForPublicIP')]"
+				}
+			}
+		},
+		{
+			"apiVersion": "2015-05-01-preview",
+			"type": "Microsoft.Network/networkSecurityGroups",
+			"name": "[variables('securityGroupName')]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"securityRules": [
+					{
+						"name": "allow-ssh-in",
+						"properties": {
+							"description": "Allows SSH traffic",
+							"protocol": "Tcp",
+							"sourcePortRange": "*",
+							"destinationPortRange": "22",
+							"sourceAddressPrefix": "*",
+							"destinationAddressPrefix": "*",
+							"access": "Allow",
+							"priority": 100,
+							"direction": "Inbound"
+						}
+					},
+					{
+						"name": "allow-mongo-in",
+						"properties": {
+							"description": "Allows MongoDb traffic",
+							"protocol": "Tcp",
+							"sourcePortRange": "*",
+							"destinationPortRange": "27017",
+							"sourceAddressPrefix": "*",
+							"destinationAddressPrefix": "*",
+							"access": "Allow",
+							"priority": 200,
+							"direction": "Inbound"
+						}
+					}
+				]
+			}
+		},
+		{
+			"apiVersion": "[variables('apiversion')]",
+			"type": "Microsoft.Network/networkInterfaces",
+			"name": "[variables('nicName')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+			],
+			"properties": {
+				"ipConfigurations": [
+					{
+						"name": "ipconfig1",
+						"properties": {
+							"privateIPAllocationMethod": "Dynamic",
+							"publicIPAddress": {
+								"id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+							},
+							"subnet": {
+								"id": "[variables('subnet1Ref')]"
+							}
+						}
+					}
+				],
+				"networkSecurityGroup": {
+					"id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('securityGroupName'))]"
+				}
+			}
+		},
+		{
+			"apiVersion": "[variables('apiversion')]",
+			"type": "Microsoft.Compute/virtualMachines",
+			"name": "[variables('vmName')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[concat('Microsoft.Storage/storageAccounts/', variables('newStorageAccountName'))]",
+				"[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+			],
+			"properties": {
+				"hardwareProfile": {
+					"vmSize": "[parameters('vmSize')]"
+				},
+				"osProfile": {
+					"computerName": "[variables('vmName')]",
+					"adminUsername": "[parameters('adminUsername')]",
+					"adminPassword": "[parameters('adminPassword')]"
+				},
+				"storageProfile": {
+					"imageReference": {
+						"publisher": "[parameters('imagePublisher')]",
+						"offer": "[parameters('imageOffer')]",
+						"sku": "[parameters('imageSKU')]",
+						"version": "latest"
+					},
+					"osDisk": {
+						"name": "osdisk1",
+						"vhd": {
+							"uri": "[concat('http://',variables('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/','osdisk1spec.vhd')]"
+						},
+						"caching": "ReadWrite",
+						"createOption": "FromImage"
+					}
+				},
+				"networkProfile": {
+					"networkInterfaces": [
+						{
+							"id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+						}
+					]
+				}
+			}
+		},
+		{
+			"type": "Microsoft.Compute/virtualMachines/extensions",
+			"name": "[concat(variables('vmName'),'/installmongo')]",
+			"apiVersion": "[variables('apiversion')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+			],
+			"properties": {
+				"publisher": "Microsoft.OSTCExtensions",
+				"type": "CustomScriptForLinux",
+				"typeHandlerVersion": "1.2",
+				"settings": {
+					"fileUris": [
+						"[variables('startupScriptUrl')]"
+					],
+					"commandToExecute": "sh mongo-install-ubuntu.sh"
+				}
+			}
+		}
+	]
 }

@@ -1,0 +1,152 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "baseName": {
+            "type": "string",
+            "metadata": {
+                "description": "Used to create unique names"
+            }
+        },
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "The location where the web apps will be deployed."
+            }
+        }
+    },
+    "variables": {
+        "webAppApiVersion": "2015-08-01",
+        "serverFarmName": "[concat(parameters('baseName'), 'webfarm')]",
+        "guishellappname": "[concat(variables('tenantName'), 'guishellWeb')]",
+        "guishellPackageUrl": "",
+        "distributionappname": "[concat(variables('tenantName'), 'distributionWeb')]",
+        "distributionPackageUrl": "",
+        "frontendappname": "[concat(variables('tenantName'), 'frontendWeb')]",
+        "frontendendPackageUrl": "",
+        "backendappname": "[concat(variables('tenantName'), 'backofficeWeb')]",
+        "backendPackageUrl": "",
+        "jobCollectionName": "[concat(variables('tenantName'), 'webjobCollection')]"
+    },
+    "resources": [
+        {
+            "name": "[variables('serverFarmName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "[variables('webAppApiVersion')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "B1",
+                "tier": "Basic",
+                "capacity": 1
+            }
+        },
+        {
+            "name": "[variables('distributionappname')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[parameters('location')]",
+            "apiVersion": "[variables('webAppApiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('serverFarmName'))]"
+            ],
+            "properties": {
+                "name": "[variables('distributionappname')]",
+                "serverFarmId": "[variables('serverFarmName')]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "[variables('webAppApiVersion')]",
+                    "name": "web",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('distributionappname'))]"
+                    ],
+                    "properties": {
+                        "use32BitWorkerProcess": false, /* 64-bit platform */
+                        "alwaysOn": true
+                    }
+                }
+            ]
+        },
+        {
+            "name": "[variables('frontendappname')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[parameters('location')]",
+            "apiVersion": "[variables('webAppApiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('serverFarmName'))]"
+            ],
+            "properties": {
+                "name": "[variables('frontendappname')]",
+                "serverFarmId": "[variables('serverFarmName')]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "[variables('webAppApiVersion')]",
+                    "name": "web",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('frontendappname'))]"
+                    ],
+                    "properties": {
+                        "use32BitWorkerProcess": false, /* 64-bit platform */
+                        "alwaysOn": true
+                    }
+                }
+            ]
+        },
+        {
+            "name": "[variables('guishellappname')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[parameters('location')]",
+            "apiVersion": "[variables('webAppApiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('serverFarmName'))]"
+            ],
+            "properties": {
+                "name": "[variables('guishellappname')]",
+                "serverFarmId": "[variables('serverFarmName')]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "[variables('webAppApiVersion')]",
+                    "name": "web",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('guishellappname'))]"
+                    ],
+                    "properties": {
+                        "use32BitWorkerProcess": false, /* 64-bit platform */
+                        "alwaysOn": true
+                    }
+                }
+            ]
+        },
+        {
+            "name": "[variables('backendappname')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[parameters('location')]",
+            "apiVersion": "[variables('webAppApiVersion')]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('serverFarmName'))]"
+            ],
+            "properties": {
+                "name": "[variables('backendappname')]",
+                "serverFarmId": "[variables('serverFarmName')]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "[variables('webAppApiVersion')]",
+                    "name": "web",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('backendappname'))]"
+                    ],
+                    "properties": {
+                        "use32BitWorkerProcess": false, /* 64-bit platform */
+                        "alwaysOn": true
+                    }
+                }
+            ]
+        }
+    ]
+}
