@@ -1,0 +1,37 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "searchAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "The Azure Search account name."
+            }
+        },
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "The Azure Region location"
+            }
+        }
+    },
+    "variables": {
+        "offerType": "Standard"
+    },
+    "resources": [
+        {
+            "apiVersion": "2015-02-28",
+            "type": "Microsoft.Search/searchService",
+            "name": "[parameters('searchAccountName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "name": "[parameters('searchAccountName')]",
+                "sku": {
+                    "name": "free"
+                },
+                "replicaCount": 1,
+                "partitionCount": 1
+            }
+        }
+    ]
+}

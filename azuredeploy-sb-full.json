@@ -1,0 +1,93 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "serviceBusNamespace": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Service Bus namespace"
+            }
+        },
+        "queueName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Queue"
+            }
+        },
+        "topicName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Topic"
+            }
+        },
+        "subscriptionName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Topic-Subscription"
+            }
+        }
+    },
+    "variables": {
+        "location": "[resourceGroup().location]",
+        "sbVersion": "[providers('Microsoft.ServiceBus', 'namespaces').apiVersions[0]]",
+        "defaultSASKeyName": "RootManageSharedAccessKey",
+        "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', parameters('serviceBusNamespace'), variables('defaultSASKeyName'))]"
+    },
+    "resources": [
+        /* Namespace */
+        {
+            "apiVersion": "[variables('sbVersion')]",
+            "name": "[parameters('serviceBusNamespace')]",
+            "type": "Microsoft.ServiceBus/namespaces",
+            "location": "[variables('location')]",
+            "resources": [
+                /* Queue */
+                {
+                    "apiVersion": "[variables('sbVersion')]",
+                    "name": "[parameters('queueName')]",
+                    "type": "Queues",
+                    "dependsOn": [
+                        "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusNamespace'))]"
+                    ],
+                    "properties": {
+                        "path": "[parameters('queueName')]"
+                    }
+                },
+                /* Topic */
+                {
+                    "apiVersion": "[variables('sbVersion')]",
+                    "name": "[parameters('topicName')]",
+                    "type": "Topics",
+                    "dependsOn": [
+                        "[concat('Microsoft.ServiceBus/namespaces/', parameters('serviceBusNamespace'))]"
+                    ],
+                    "properties": {
+                        "path": "[parameters('topicName')]"
+                    },
+                    "resources": [
+                        /* Subscription */
+                        {
+                            "apiVersion": "[variables('sbVersion')]",
+                            "name": "[parameters('subscriptionName')]",
+                            "type": "Subscriptions",
+                            "dependsOn": [
+                                "[parameters('topicName')]"
+                            ],
+                            "properties": {}
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "outputs": {
+        "NamespaceConnectionString": {
+            "type": "string",
+            "value": "[listkeys(variables('authRuleResourceId'), variables('sbVersion')).primaryConnectionString]"
+        },
+        "SharedAccessPolicyPrimaryKey": {
+            "type": "string",
+            "value": "[listkeys(variables('authRuleResourceId'), variables('sbVersion')).primaryKey]"
+        }
+    }
+}
