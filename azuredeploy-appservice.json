@@ -52,8 +52,8 @@
 			"apiVersion": "2015-08-01",
 			"location": "[variables('location')]",
 			"sku": {
-				"name": "S1",
-				"tier": "Standard",
+				"name": "B1",
+				"tier": "Basic",
 				"capacity": 1
 			},
 			"properties": { }

@@ -19,8 +19,10 @@
 		},
 		"vmPassword": {
 			"type": "securestring",
+			"minLength": 6,
+			"maxLength": 72,
 			"metadata": {
-				"description": "Virtual Machine Password"
+				"description": "Virtual Machine Password, must have an uppercase character, a lowercase character, a numeric digit and a special character."
 			}
 		},
 		"guiShellApiSecret": {
