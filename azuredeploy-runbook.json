@@ -14,105 +14,106 @@
                 "description": "The region to deploy the Automation account in."
             }
         },
-        "automationsScriptURI": {
+        "automationScriptURI": {
             "type": "string",
             "metadata": {
                 "description": "Script to run"
             }
-        }
-    },
-        "automationsScriptName": {
+        },
+        "automationScriptName": {
             "type": "string",
             "metadata": {
-                "description": "Script name used to name runbook"
+                "description": "Script name used to name runbook, must be equal to the workflow name in the script"
             }
         },
-    "jobId": {
-        "type": "string",
-        "metadata": {
-            "description": "The GUID for the runbook job to be started."
+        "jobId": {
+            "type": "string",
+            "metadata": {
+                "description": "The GUID for the runbook job to be started."
+            }
         }
-},
-"variables": {
-    "apiversion" : "2015-06-01",
-    "automationAccountName": "[concat(parameters('baseName'),'automation')]",
-    "credentialName": "automationDeployCredential",
-    "automationUsername": "DeployAutomationUser",
-    "automationPassword": "[concat(parameters('baseName'),'p@$$w0rd')]",
-    "runbookName": "[parameters('scriptName')]",
-    "scriptUri": "[parameters('automationsScriptURI')]",
-    "runbookDescription": "Authenticates to Azure and runs deployment script",
-    "sku": "Free",
-    "jobId":"[parameters('jobId')]",
-    "regionId": "[parameters('location')]"
-},
-"resources": [
-    {
-        "name": "[variables('automationAccountName')]",
-        "type": "Microsoft.Automation/automationAccounts",
-        "apiVersion": "[variables('apiversion')]",
-        "location": "[variables('regionId')]",
-        "dependsOn": [],
-        "tags": {},
-        "properties": {
-            "sku": {
-                "name": "[variables('sku')]"
-            }
-        },
-        "resources": [
-            {
-                "name": "[variables('runbookName')]",
-                "type": "runbooks",
-                "apiVersion": "[variables('apiversion')]",
-                "location": "[variables('regionId')]",
-                "dependsOn": [
-                    "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'))]"
-                ],
-                "tags": {},
-                "properties": {
-                    "runbookType": "Script",
-                    "logProgress": "false",
-                    "logVerbose": "false",
-                    "description": "[variables('runbookDescription')]",
-                    "publishContentLink": {
-                        "uri": "[variables('scriptUri')]",
-                        "version": "1.0.0.0"
+    },
+    "variables": {
+        "apiversion": "2015-10-31",
+        "automationAccountName": "[concat(parameters('baseName'),'automation')]",
+        "comment1" : "#first make sure you created this user in Azure AD and added permissions for the subscription",
+        "comment2" : "#or pre-create the account and credential in Azure Automation",
+        "credentialName": "automationDeployCredential",
+        "automationUsername": "DeployAutomationUser",
+        "automationPassword": "p@$$w0rd",
+        "runbookName": "[parameters('automationScriptName')]",
+        "scriptUri": "[parameters('automationScriptURI')]",
+        "runbookDescription": "Authenticates to Azure and runs deployment script",
+        "sku": "Free",
+        "jobId": "[parameters('jobId')]",
+        "regionId": "[parameters('location')]"
+    },
+    "resources": [
+        {
+            "name": "[variables('automationAccountName')]",
+            "type": "Microsoft.Automation/automationAccounts",
+            "apiVersion": "[variables('apiversion')]",
+            "location": "[variables('regionId')]",
+            "dependsOn": [],
+            "tags": {},
+            "properties": {
+                "sku": {
+                    "name": "[variables('sku')]"
+                }
+            },
+            "resources": [
+                {
+                    "name": "[variables('runbookName')]",
+                    "type": "runbooks",
+                    "apiVersion": "[variables('apiversion')]",
+                    "location": "[variables('regionId')]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'))]"
+                    ],
+                    "tags": {},
+                    "properties": {
+                        "runbookType": "Script",
+                        "logProgress": "false",
+                        "logVerbose": "false",
+                        "description": "[variables('runbookDescription')]",
+                        "publishContentLink": {
+                            "uri": "[variables('scriptUri')]",
+                            "version": "1.0.0.0"
+                        }
                     }
-                }
-            },
-            {
-                "name": "[variables('credentialName')]",
-                "type": "credentials",
-                "apiVersion": "[variables('apiversion')]",
-                "location": "[variables('regionId')]",
-                "dependsOn": [
-                    "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'))]"
-                ],
-                "tags": {},
-                "properties": {
-                    "userName": "[variables('userName')]",
-                    "password": "[variables('password')]"
-                }
-            },
-            {
-                "name": "[variables('jobId')]",
-                "type": "jobs",
-                "apiVersion": "[variables('apiversion')]",
-                "location": "[variables('regionId')]",
-                "dependsOn": [
-                    "[concat('Microsoft.Automation/automationAccounts/' variables('automationAccountName'))]",
-                    "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'), '/runbooks/',variables('runbookName'))]"
-                ],
-                "tags": {
                 },
-                "properties": {
-                    "runbook": {
-                        "name": "[variables('runbookName')]"
+                {
+                    "name": "[variables('credentialName')]",
+                    "type": "credentials",
+                    "apiVersion": "[variables('apiversion')]",
+                    "location": "[variables('regionId')]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'))]"
+                    ],
+                    "tags": {},
+                    "properties": {
+                        "userName": "[variables('automationUsername')]",
+                        "password": "[variables('automationPassword')]"
+                    }
+                },
+                {
+                    "name": "[variables('jobId')]",
+                    "type": "jobs",
+                    "apiVersion": "[variables('apiversion')]",
+                    "location": "[variables('regionId')]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName') )]",
+                        "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'), '/runbooks/',variables('runbookName'))]"
+                    ],
+                    "tags": {},
+                    "properties": {
+                        "runbook": {
+                            "name": "[variables('runbookName')]"
+                        }
                     }
                 }
-            }
-        ]
-    }
-],
-"outputs": {}
+            ]
+        }
+    ],
+    "outputs": {}
 }
